@@ -515,8 +515,8 @@ func (j *JournalManager) insertConflictJournalLocked(
 	j.clearedConflictTlfs[key] = val
 	j.tlfJournals[fakeTlfID] = tj
 	j.log.CDebugf(ctx, "Made conflict journal for %s, real "+
-		"TLF ID = %s, fake TLF ID = %s, num = %d",
-		tj.dir, tj.tlfID, fakeTlfID, num)
+		"TLF ID = %s, fake TLF ID = %s, date = %s, num = %d",
+		tj.dir, tj.tlfID, fakeTlfID, date, num)
 }
 
 // EnableExistingJournals turns on the write journal for all TLFs for
