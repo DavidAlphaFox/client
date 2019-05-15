@@ -1470,6 +1470,7 @@ export const favoriteFolderConflictType = {
   none: 0,
   inConflict: 1,
   inConflictAndStuck: 2,
+  clearedConflict: 3,
 }
 
 export const favoriteFolderType = {
@@ -2266,6 +2267,7 @@ export type FolderConflictType =
   | 0 // NONE_0
   | 1 // IN_CONFLICT_1
   | 2 // IN_CONFLICT_AND_STUCK_2
+  | 3 // CLEARED_CONFLICT_3
 
 export type FolderSyncConfig = $ReadOnly<{mode: FolderSyncMode, paths?: ?Array<String>}>
 export type FolderSyncConfigAndStatus = $ReadOnly<{config: FolderSyncConfig, status: FolderSyncStatus}>
