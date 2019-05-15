@@ -234,6 +234,7 @@ func (j journalMDOps) getRangeFromJournal(
 func (j journalMDOps) GetIDForHandle(
 	ctx context.Context, handle *tlfhandle.Handle) (id tlf.ID, err error) {
 	id = handle.TlfID()
+	j.jManager.log.CDebugf(ctx, "Looking up ID for %s, id=%s", handle.GetCanonicalName(), id)
 	if id == tlf.NullID {
 		id, err = j.MDOps.GetIDForHandle(ctx, handle)
 		if err != nil {

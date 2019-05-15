@@ -893,7 +893,7 @@ func (md *MDOpsStandard) getForHandle(ctx context.Context, handle *tlfhandle.Han
 	}
 
 	// Check for handle readership, to give a nice error early.
-	if handle.Type() == tlf.Private {
+	if handle.Type() == tlf.Private && !handle.IsBackedByTeam() {
 		session, err := md.config.KBPKI().GetCurrentSession(ctx)
 		if err != nil {
 			return tlf.ID{}, ImmutableRootMetadata{}, err

@@ -269,7 +269,13 @@ func (dl *DaemonLocal) ResolveIdentifyImplicitTeam(
 		return dl.localImplicitTeams[tid], nil
 	}
 
-	// If the implicit team doesn't exist, always create it.
+	// If the implicit team doesn't exist, always create it, unless it
+	// contains a local conflict.
+	for _, e := range extensions {
+		if e.Type == tlf.HandleExtensionLocalConflict {
+			return ImplicitTeamInfo{}, errors.New("No local conflict iteams")
+		}
+	}
 
 	// Need to make the team info as well, so get the list of user
 	// names and resolve them.  Auto-generate an implicit team name.

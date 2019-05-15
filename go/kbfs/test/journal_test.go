@@ -892,13 +892,28 @@ func TestJournalCoalescingConflictingCreatesMultiblock(t *testing.T) {
 
 func testJournalConflictClearing(
 	t *testing.T, tlfBaseName string, switchTlf func(string) optionOp,
-	lsfavs func([]string) fileOp) {
+	lsfavs func([]string) fileOp, isBackedByTeam, expectSelfFav bool) {
+	iteamSuffix := ""
+	if isBackedByTeam {
+		iteamSuffix = " #1"
+	}
 	conflict1 := fmt.Sprintf(
-		"%s (local conflicted copy 2004-12-23)", tlfBaseName)
+		"%s (local conflicted copy 2004-12-23%s)", tlfBaseName, iteamSuffix)
 	conflict2 := fmt.Sprintf(
 		"%s (local conflicted copy 2004-12-23 #2)", tlfBaseName)
+	var expectedFavs []string
+	if expectSelfFav {
+		expectedFavs = []string{"bob"}
+	}
+	expectedFavs = append(expectedFavs, tlfBaseName, conflict1, conflict2)
+	iteamOp := func(*opt) {}
+	if isBackedByTeam {
+		iteamOp = implicitTeam("alice,bob", "")
+	}
 	test(t, journal(),
 		users("alice", "bob"),
+		iteamOp,
+		team("ab", "alice,bob", ""),
 		switchTlf(tlfBaseName),
 		as(alice,
 			mkfile("a/b", "hello"),
@@ -941,17 +956,27 @@ func testJournalConflictClearing(
 		as(bob, noSync(),
 			lsdir("a/", m{"b$": "FILE", "d$": "FILE"}),
 			read("a/d", "foo"),
-			lsfavs([]string{"bob", tlfBaseName, conflict1, conflict2}),
+			lsfavs(expectedFavs),
 		),
 	)
 }
 
 func TestJournalConflictClearingPrivate(t *testing.T) {
 	testJournalConflictClearing(
-		t, "alice,bob", inPrivateTlf, lsprivatefavorites)
+		t, "alice,bob", inPrivateTlf, lsprivatefavorites, false, true)
+}
+
+func TestJournalConflictClearingPrivateImplicit(t *testing.T) {
+	testJournalConflictClearing(
+		t, "alice,bob", inPrivateTlf, lsprivatefavorites, true, true)
 }
 
 func TestJournalConflictClearingPublic(t *testing.T) {
 	testJournalConflictClearing(
-		t, "alice,bob", inPublicTlf, lspublicfavorites)
+		t, "alice,bob", inPublicTlf, lspublicfavorites, false, true)
+}
+
+func TestJournalConflictClearingTeam(t *testing.T) {
+	testJournalConflictClearing(
+		t, "ab", inSingleTeamTlf, lsteamfavorites, true, false)
 }

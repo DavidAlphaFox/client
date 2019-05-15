@@ -1198,6 +1198,12 @@ func lsprivatefavorites(contents []string) fileOp {
 	}, Defaults, fmt.Sprintf("lsprivatefavorites(%s)", contents)}
 }
 
+func lsteamfavorites(contents []string) fileOp {
+	return fileOp{func(c *ctx) error {
+		return lsfavoritesOp(c, contents, tlf.SingleTeam)
+	}, Defaults, fmt.Sprintf("lsteamfavorites(%s)", contents)}
+}
+
 func lsdir(name string, contents m) fileOp {
 	return fileOp{func(c *ctx) error {
 		folder, _, err := c.getNode(name, noCreate, resolveAllSyms)
