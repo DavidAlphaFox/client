@@ -890,9 +890,16 @@ func TestJournalCoalescingConflictingCreatesMultiblock(t *testing.T) {
 	testJournalCoalescingConflictingCreates(t, 1024)
 }
 
-func TestJournalConflictClearingPrivate(t *testing.T) {
+func testJournalConflictClearing(
+	t *testing.T, tlfBaseName string, switchTlf func(string) optionOp,
+	lsfavs func([]string) fileOp) {
+	conflict1 := fmt.Sprintf(
+		"%s (local conflicted copy 2004-12-23)", tlfBaseName)
+	conflict2 := fmt.Sprintf(
+		"%s (local conflicted copy 2004-12-23 #2)", tlfBaseName)
 	test(t, journal(),
 		users("alice", "bob"),
+		switchTlf(tlfBaseName),
 		as(alice,
 			mkfile("a/b", "hello"),
 		),
@@ -915,13 +922,13 @@ func TestJournalConflictClearingPrivate(t *testing.T) {
 			lsdir("", m{"a$": "DIR"}),
 			lsdir("a/", m{"b$": "FILE"}),
 		),
-		inPrivateTlf("alice,bob (local conflicted copy 2004-12-23)"),
+		switchTlf(conflict1),
 		as(bob, noSync(),
 			lsdir("a/", m{"b$": "FILE", "c$": "FILE"}),
 			read("a/c", "foo"),
 		),
 		// Add a second conflict for the same date.
-		inPrivateTlf("alice,bob"),
+		switchTlf(tlfBaseName),
 		as(bob,
 			addTime(1*time.Minute),
 			lsdir("", m{"a$": "DIR"}),
@@ -930,16 +937,21 @@ func TestJournalConflictClearingPrivate(t *testing.T) {
 			mkfile("a/d", "foo"),
 			clearConflicts(),
 		),
-		inPrivateTlf("alice,bob (local conflicted copy 2004-12-23 #2)"),
+		switchTlf(conflict2),
 		as(bob, noSync(),
 			lsdir("a/", m{"b$": "FILE", "d$": "FILE"}),
 			read("a/d", "foo"),
-			lsprivatefavorites([]string{
-				"bob",
-				"alice,bob",
-				"alice,bob (local conflicted copy 2004-12-23)",
-				"alice,bob (local conflicted copy 2004-12-23 #2)",
-			}),
+			lsfavs([]string{"bob", tlfBaseName, conflict1, conflict2}),
 		),
 	)
+}
+
+func TestJournalConflictClearingPrivate(t *testing.T) {
+	testJournalConflictClearing(
+		t, "alice,bob", inPrivateTlf, lsprivatefavorites)
+}
+
+func TestJournalConflictClearingPublic(t *testing.T) {
+	testJournalConflictClearing(
+		t, "alice,bob", inPublicTlf, lspublicfavorites)
 }
