@@ -930,6 +930,13 @@ func (md *MDOpsStandard) getForHandle(ctx context.Context, handle *tlfhandle.Han
 	if err != nil {
 		return tlf.ID{}, ImmutableRootMetadata{}, err
 	}
+	if handle.IsLocalConflict() {
+		md.log.CDebugf(ctx, "Stripping out local conflict info from %s "+
+			"before fetching the ID", handle.GetCanonicalPath())
+		bh.ConflictInfo = nil
+	} else {
+		md.log.CDebugf(ctx, "Not stripping from %s", handle.GetCanonicalPath())
+	}
 
 	id, rmds, err := mdserv.GetForHandle(ctx, bh, mStatus, lockBeforeGet)
 	if err != nil {
