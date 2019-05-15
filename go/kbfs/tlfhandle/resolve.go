@@ -250,7 +250,10 @@ func makeHandleHelper(
 		tlfID:             tlfID,
 	}
 
-	if !isImplicit && h.tlfID == tlf.NullID && idGetter != nil {
+	needIDLookup := (!isImplicit && h.tlfID == tlf.NullID) ||
+		(conflictInfo != nil &&
+			conflictInfo.Type == tlf.HandleExtensionLocalConflict)
+	if needIDLookup && idGetter != nil {
 		// If this isn't an implicit team yet, look up possible
 		// pre-existing TLF ID from the mdserver.
 		tlfID, err := idGetter.GetIDForHandle(ctx, h)
@@ -468,7 +471,12 @@ func (h Handle) ResolvesTo(
 	resolvesTo bool, partialResolvedH *Handle, err error) {
 	// Check the conflict extension.
 	var conflictAdded, finalizedAdded bool
-	if !h.IsConflict() && other.IsConflict() {
+	if (h.IsConflict() && other.IsLocalConflict()) ||
+		(h.IsLocalConflict() && other.IsConflict()) {
+		return false, nil, errors.New(
+			"Can't transition between conflict and local conflict")
+	} else if (!h.IsConflict() && other.IsConflict()) ||
+		(!h.IsLocalConflict() && other.IsLocalConflict()) {
 		conflictAdded = true
 		// Ignore the added extension for resolution comparison purposes.
 		other.conflictInfo = nil
